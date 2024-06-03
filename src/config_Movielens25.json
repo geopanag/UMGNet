@@ -1,7 +1,7 @@
 {
 "dataset":"movielens",
 "path_to_data":"../data/Movielens25",
-"num_epochs" : 1000,
+"num_epochs" : 2000,
 "early_stopping_threshold":100,
 "lr" : 0.01,
 "dropout" : 0.4,
