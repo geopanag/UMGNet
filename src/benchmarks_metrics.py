@@ -123,7 +123,7 @@ def main(config_file):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--config', type=str, default="config_RetailHe.json",
+    parser.add_argument('--config', type=str, default="config_RetailHero.json",
             help='The config of the dataset to run.')
     
     args = parser.parse_args()
