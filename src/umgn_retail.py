@@ -20,8 +20,12 @@ from models import BipartiteSAGE2mod, UserMP
 
 
 
-def run_umgnn(outcome, treatment, criterion,xu, xp, edge_index, edge_index_df, task, n_hidden, out_channels, no_layers, k, run,
-              model_file, num_users, num_products, with_lp, alpha, l2_reg, dropout, lr, num_epochs, early_thres,repr_balance, device, validation_fraction=5):
+def run_umgnn(outcome: torch.tensor , treatment: torch.tensor, criterion: torch.nn.modules.loss._Loss, 
+              xu: torch.tensor , xp: torch.tensor , edge_index: torch.tensor, edge_index_df: pd.DataFrame, 
+              task: int, n_hidden: int, out_channels: int, no_layers: int, k: int, run: int,
+              model_file: str, num_users: int, num_products:int , with_lp: bool, alpha: float, l2_reg: float, 
+              dropout: float, lr: float, num_epochs: int, early_thres: int,repr_balance: bool, device:torch.device, 
+              validation_fraction: int =5) -> np.ndarray:
     #------ K fold split
     kf = KFold(n_splits=abs(k), shuffle=True, random_state=run)
     result_fold = []
@@ -184,7 +188,7 @@ def main():
     model_file_name = config["model_file"]
     early_thres = config['early_stopping_threshold']
     l2_reg = config['l2_reg']
-    with_lp = config['with_lp'] == 1
+    with_lp = config['with_label_prop'] == 1
     number_of_runs = config['number_of_runs']
     dropout = config['dropout']
 

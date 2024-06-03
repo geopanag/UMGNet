@@ -19,8 +19,13 @@ import random
 
 
 
-
-def run_umgnn_al(outcome, treatment, criterion, xu, xp, edge_index, edge_index_df, task, n_hidden, out_channels, no_layers, budget_iter, run, model_file, num_users, num_products, with_lp, alpha, l2_reg, dropout, lr, num_epochs, early_thres,repr_balance, device,active_policy, degree, a1, a2, a3, epsilon, validation_fraction=5 ):
+def run_umgnn_al(outcome: torch.tensor, treatment: torch.tensor, criterion: torch.nn.modules.loss._Loss, 
+              xu: torch.tensor , xp: torch.tensor , edge_index: torch.tensor, edge_index_df: pd.DataFrame, 
+              task: int, n_hidden: int, out_channels: int, no_layers: int, k: int, run: int,
+              model_file: str, num_users: int, num_products:int , with_lp: bool, alpha: float, l2_reg: float, 
+              dropout: float, lr: float, num_epochs: int, early_thres: int,repr_balance: bool, device:torch.device, 
+              budget_iter: int, active_policy: str, degree: np.ndarray, a1: float, a2: float, a3: float, epsilon: float,
+              validation_fraction: int =5)->(list,int,int):
     """
     Run the AL algorithm defined in the paper based on the TGNN model.
     """
@@ -203,7 +208,7 @@ def main():
     early_thres = config['early_stopping_threshold']
     l2_reg = config['l2_reg']
     #config["with_representation_balance"]==1
-    with_lp = config['with_lp'] == 1
+    with_lp = config['with_label_prop'] == 1
     number_of_runs = config['number_of_runs']
     dist_alpha = 0.5
     epsilon = 0.5
@@ -281,11 +286,10 @@ def main():
 
                 num_users = int(treatment.shape[0]) 
 
-                result_iter, len_train, len_test = run_umgnn_al(outcome, treatment, criterion, xu, xp, edge_index, edge_index_df, task, n_hidden, out_channels, no_layers, budget_iter, run,
-                                            model_file, num_users, num_products, with_lp, dist_alpha, l2_reg,dropout, lr, num_epochs, early_thres,repr_balance, device, active_policy,
-                                            degree, a1, a2, a3, epsilon)
-
-
+                result_iter, len_train, len_test = run_umgnn_al(outcome, treatment, criterion, xu, xp, edge_index, edge_index_df, 
+                                                                task, n_hidden, out_channels, no_layers, run, model_file, num_users, num_products,
+                                                                with_lp, dist_alpha, l2_reg,dropout, lr, num_epochs, early_thres, 
+                                                                repr_balance, device, budget_iter, active_policy, degree, a1, a2, a3, epsilon)    
                
                 pd.DataFrame(result_iter).to_csv(results_file,index=False)
     fwi.close()
