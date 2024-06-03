@@ -1,0 +1,20 @@
+{
+"dataset":"movielens",
+"path_to_data":"../data/Movielens25",
+"num_epochs" : 1000,
+"early_stopping_threshold":100,
+"lr" : 0.01,
+"dropout" : 0.4,
+"n_hidden" : 64,
+"l2_reg" : 0.0001,
+"out_channels" : 1,
+"no_layers" :1,
+"number_of_runs":5,
+"with_label_prop" : 0,
+"user_feature_file" : "movielens_features_filtered_X.csv",
+"edge_index_file" : "movielens_graph_filtered_X.csv",
+"output_file" : "movielens_y_run_filtered_X.csv",
+"model_file" : "model_version_v4.pt",  
+"results_file_name" : "results_version.csv",
+"causalml_dml_results" : "causalml_dml_results_version.csv"
+}

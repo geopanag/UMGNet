@@ -1,0 +1,20 @@
+{
+"dataset":"retail",
+"path_to_data":"../data/RetailHero",
+"num_epochs" : 2000,
+"early_stopping_threshold":100,
+"lr" : 0.01,
+"dropout" : 0.4,
+"n_hidden" : 64,
+"l2_reg" : 0.0001,
+"out_channels" : 1,
+"no_layers" :1,
+"number_of_runs":5,
+"with_label_prop" : 0,
+"user_feature_file" : "user_features_v4.csv",
+"edge_index_file" : "user_product_v4.csv",
+"output_file" : "_",
+"model_file" : "model_version_v4.pt",
+"results_file_name" : "results_version.csv",
+"causalml_dml_results" : "causalml_dml_results_version.csv"
+}
