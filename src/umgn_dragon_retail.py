@@ -11,7 +11,7 @@ import torch
 import torch.nn as nn
 from sklearn.preprocessing import StandardScaler
 
-from utils import  uplift_score, make_outcome_feature, binary_treatment_loss, outcome_regression_loss_dragnn
+from utils import  uplift_score, make_outcome_feature, outcome_regression_loss_dragnn
 import random
 
 
@@ -69,7 +69,7 @@ def run_dragnn(outcome: torch.tensor , treatment: torch.tensor, criterion: torch
             
         #---------------------------------------------------------- Model and Optimizer
         # xu_ : user embeddings e.g. sex, age, coupon issue time etc.
-        # xp: product embeddings one-hot encoding 
+        # xp : product embeddings one-hot encoding 
         model = BipartiteDraGNN(xu_.shape[1], xp.shape[1] , n_hidden, out_channels, no_layers, dropout).to(device)
         optimizer = Adam(model.parameters(), lr=lr, weight_decay = l2_reg)
 
@@ -92,13 +92,13 @@ def run_dragnn(outcome: torch.tensor , treatment: torch.tensor, criterion: torch
                 out_treatment = F.sigmoid(out_treatment)
                 out_control = F.sigmoid(out_control)
                 
-            if repr_balance:
-                #dist = alpha * wasserstein(hidden_treatment, hidden_control, cuda=True) 
-                dist = alpha*sinkhorn_loss(hidden_treatment , hidden_control)
-                #sinkhorn = SinkhornDistance(eps=0.1, max_iter=100) 
-                #dist = alpha* sinkhorn(hidden_treatment , hidden_control)
-            else:
-                dist = 0
+            #if repr_balance:
+            #dist = alpha * wasserstein(hidden_treatment, hidden_control, cuda=True) 
+            #dist = alpha*sinkhorn_loss(hidden_treatment , hidden_control)
+            #sinkhorn = SinkhornDistance(eps=0.1, max_iter=100) 
+            #dist = alpha* sinkhorn(hidden_treatment , hidden_control)
+            #else:
+            #    dist = 0
 
             loss = criterion(treatment[subtrain_indices], out_treatment[subtrain_indices], 
                         out_control[subtrain_indices], out_T[subtrain_indices], outcome[subtrain_indices]) + dist # target_labels are your binary labels
@@ -197,7 +197,6 @@ def main():
     model_file_name = config["model_file"]
     early_thres = config['early_stopping_threshold']
     l2_reg = config['l2_reg']
-    #config["with_representation_balance"]==1
     with_lp = config['with_label_prop'] == 1
     number_of_runs = config['number_of_runs']
     dropout = config["dropout"]
@@ -210,8 +209,7 @@ def main():
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
     edge_index = torch.tensor(edge_index_df[['user','product']].values).type(torch.LongTensor).T.to(device)
-    
-    
+       
     columns_to_norm = ['age','first_issue_abs_time','first_redeem_abs_time','redeem_delay','degree_before','weighted_degree_before'] 
     if len(columns_to_norm)>0:
         normalized_data = StandardScaler().fit_transform(features[columns_to_norm])
@@ -224,7 +222,6 @@ def main():
     outcome_change = torch.tensor(features['avg_money_change'].values).type(torch.FloatTensor).to(device)
 
     # add always the product with the maximum index (it has only one edge) to facilitate the sparse message passing
-    
     features = features.drop(['avg_money_before','avg_count_before'],axis=1)
     
     
@@ -240,7 +237,7 @@ def main():
             
             torch.cuda.empty_cache()
             
-            v = "dragon_v4_"+str(lr)+"_"+str(n_hidden)+"_"+str(num_epochs)+"_"+str(dropout)+"_"+str(with_lp)+"_"+str(k)+"_"+str(task)
+            v = "dragon_"+str(lr)+"_"+str(n_hidden)+"_"+str(num_epochs)+"_"+str(dropout)+"_"+str(with_lp)+"_"+str(k)+"_"+str(task)
             
             model_file = model_file_name.replace("version",str(v))
             results_file = results_file_name.replace("version",str(v))

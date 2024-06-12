@@ -50,14 +50,12 @@ def main(config_file):
 
 
     for dat in range(dats):
-        
         for task in tasks:
             for k in [5,20]:
              
                 dataset_ = dataset+str(dat)
 
-                
-                v = "benchmarks_filtered_less_v2n_"+dataset_+"_"+str(k)+"_"+str(task)
+                v = "benchmarks_"+dataset_+"_"+str(k)+"_"+str(task)
                 
                 causalml_dml_results_file = config['causalml_dml_results'].replace("version",str(v))
 
@@ -111,8 +109,8 @@ def main(config_file):
                     p = pd.Series( list(causalml_results.round(4).mean().values.T)+["Dragon"] )
                     result = pd.concat([result,p],axis=1)
                     print("dragon done")
-                    
-                    
+                    result.T.to_csv(causalml_dml_results_file.replace("dml","all"),index=False) # CEVAE takes too long to run
+
                     causalml_results = test_causalml(confounders, outcome, treatment, k, task, "CEVAE",random_seed=run)
                     p = pd.Series( list(causalml_results.round(4).mean().values.T)+["CEVAE"] )
                     result = pd.concat([result,p],axis=1)

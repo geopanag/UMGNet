@@ -80,6 +80,8 @@ class BipartiteDraGNN(torch.nn.Module):
         
         return out_2t1, out_2t0, out_2T, hidden_1t1, hidden_1t0
     
+
+
 class UserMP(MessagePassing):
     def __init__(self, aggr='add',normed=False, **kwargs):
         super(UserMP, self).__init__(aggr=aggr,node_dim=-1, **kwargs)
@@ -96,6 +98,8 @@ class UserMP(MessagePassing):
         #  Return only the aggregation of the neighbors not the node's feature 
         return aggr_out
     
+
+
 class BipartiteSAGE2mod(torch.nn.Module):
     def __init__(self, nfeat:int, nproduct:int , hidden_channels:int , out_channels: int, num_layers:int, dropout_rate:float =0):
         super().__init__()

@@ -7,7 +7,6 @@ from torch.optim import Adam
 
 import json 
 
-
 from sklearn.preprocessing import StandardScaler
 
 from utils import uplift_score, make_outcome_feature, cluster, mc_dropout, outcome_regression_loss, al_lp
@@ -220,7 +219,7 @@ def main():
     a2 = 0.1
     a3 = 0.7
         
-    fwi= open('lengths_.txt', 'a')
+    fwi= open('lengths.txt', 'a')
     edge_index_df = pd.read_csv(config["edge_index_file"])
     features = pd.read_csv(config["user_feature_file"])
 
@@ -252,7 +251,7 @@ def main():
     xu = torch.tensor(features_tmp.values).type(torch.FloatTensor).to(device)
 
 
-    for task in [2,1]: 
+    for task in [1, 2]: 
         torch.cuda.empty_cache()
         if lr==0.001:
             dropout = 0.2
@@ -261,14 +260,13 @@ def main():
             dropout = 0.4
             n_hidden = 64 
 
-        for budget_iter in [20,5]:    
+        for budget_iter in [5, 20]:    
 
             for run in range(0,number_of_runs):  
-                run+=10
                 np.random.seed(run)
                 random.seed(run)
                 torch.manual_seed(run)
-                v = "tgnn_v4_"+str(run)+"_"+active_policy+"_"+str(budget_iter)+"_"+str(lr)+"_"+str(n_hidden)+"_"+str(num_epochs)+"_"+str(dropout)+"_"+str(with_lp)+"_"+"_"+str(task)
+                v = "al_umgn_"+str(run)+"_"+active_policy+"_"+str(budget_iter)+"_"+str(lr)+"_"+str(n_hidden)+"_"+str(num_epochs)+"_"+str(dropout)+"_"+str(with_lp)+"_"+"_"+str(task)
 
                 model_file = model_file_name.replace("version",str(v))
                 results_file = results_file_name.replace("version",str(v))

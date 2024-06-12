@@ -46,5 +46,4 @@ python umgn_dragon_retail.py
 ## Active learning
 ```bash
 python al_umgn_retail.py
-python al_umgn_movielens.py
 ```
