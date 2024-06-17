@@ -155,7 +155,7 @@ def prepare_Movielens():
     user_map = {j:i for i,j in enumerate(ratings.user.unique())}
     ratings['t'] =ratings.weight>=ratings.weight.median()
 
-    edges['T'] = edges.weight < ratings.weight.median()
+    edges['T'] = edges.weight > ratings.weight.median()
     edges['T'] = edges['T'].astype(int)
 
     # derive the mappings
