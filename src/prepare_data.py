@@ -134,6 +134,67 @@ def prepare_RetailHero(train_ind_file: str = "uplift_train.csv", feature_file: s
 
     data.to_csv(features_final_file, index=False)
 
+def prepare_Movielens_without_sim():
+  
+    lab = "nosim"
+    #===== graph
+    edges = pd.read_csv("ratings.csv")
+    edges = edges[['movieId','userId','rating']]
+    edges.columns = ['movie','user','weight']
+    
+    gx = edges.groupby(['movie'])['weight'].count()
+    chosen_movies = gx[gx>200].reset_index()['movie'] #gx.mean()
+    edges = edges[edges['movie'].isin(chosen_movies)]
+    # define treated and untreated
+    rating_count  = edges.groupby('movie')['weight'].count().reset_index()
+    movie_map = {j:i for i,j in enumerate(rating_count.movie.unique())}
+    rating_count['t'] =rating_count.weight>=rating_count.weight.median()
+    
+    edges['T'] = 1
+    
+    # derive the mappings
+    user_map = {j:i for i,j in enumerate(edges['user'].unique())}
+    
+    edges['movie'] = edges['movie'].map(movie_map)
+    rating_count['movie'] = rating_count['movie'].map(movie_map)
+    edges['user'] = edges['user'].map(user_map)
+    
+    edges.to_csv("../../movielens_graph_filtered.csv",index=False)
+
+    edges.to_csv("../../movielens_graph_filtered_"+lab+".csv",index=False)
+
+    #===== treatment
+    movies = pd.read_csv("movies.csv")
+    
+    movies['movieId'] = movies['movieId'].map(movie_map)
+    
+    movies = movies[movies['movieId'].isin(edges.movie.unique())]
+    
+    rating_count['t'] = rating_count['t'].astype(int)
+    #ratings.to_csv("movielens_treatments.csv",index=False)
+    dict_treatment = dict(zip(rating_count['movie'], rating_count['t']))
+    movies['t'] = movies['movieId'].map(dict_treatment)
+
+    movie_ratings = edges.groupby('movie')['weight'].mean()
+    #===== features
+    moviesd = np.expand_dims(movies['movieId'].astype(int).values, axis=0).T
+    treatmentd = np.expand_dims(movies['t'].values, axis=0).T
+    outcome = np.expand_dims(movie_ratings[movies['movieId'].astype(int)].values,axis=0).T
+    print('making features')
+    
+    movies['sentence'] = " title: "+movies['title']+" genres:"+movies['genres']
+    model = SentenceTransformer('paraphrase-multilingual-MiniLM-L12-v2', device='cuda') # use multilingual models for texts with non-english characters
+    embeddings_lite = model.encode(movies['sentence'].values.tolist())
+    #pd.DataFrame(np.hstack([moviesd,treatmentd,embeddings_lite])).to_csv("movielens_features_full.csv",index=False)
+    
+    pca = PCA(n_components=16) 
+    embeddings_lite = pca.fit_transform(embeddings_lite)
+    x = np.hstack([moviesd, treatmentd, outcome, embeddings_lite])
+    x = pd.DataFrame(x).sort_values(0)
+    x = pd.DataFrame(x.values[:,1:])
+    
+    x.to_csv("movielens_features_filtered_"+lab+".csv",index=False)
+
 
 
 def prepare_Movielens():
