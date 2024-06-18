@@ -134,6 +134,8 @@ def prepare_RetailHero(train_ind_file: str = "uplift_train.csv", feature_file: s
 
     data.to_csv(features_final_file, index=False)
 
+
+
 def prepare_Movielens_without_sim():
   
     lab = "nosim"
@@ -159,10 +161,8 @@ def prepare_Movielens_without_sim():
     rating_count['movie'] = rating_count['movie'].map(movie_map)
     edges['user'] = edges['user'].map(user_map)
     
-    edges.to_csv("../../movielens_graph_filtered.csv",index=False)
-
     edges.to_csv("../../movielens_graph_filtered_"+lab+".csv",index=False)
-
+    
     #===== treatment
     movies = pd.read_csv("movies.csv")
     
@@ -174,7 +174,7 @@ def prepare_Movielens_without_sim():
     #ratings.to_csv("movielens_treatments.csv",index=False)
     dict_treatment = dict(zip(rating_count['movie'], rating_count['t']))
     movies['t'] = movies['movieId'].map(dict_treatment)
-
+    
     movie_ratings = edges.groupby('movie')['weight'].mean()
     #===== features
     moviesd = np.expand_dims(movies['movieId'].astype(int).values, axis=0).T
@@ -193,7 +193,7 @@ def prepare_Movielens_without_sim():
     x = pd.DataFrame(x).sort_values(0)
     x = pd.DataFrame(x.values[:,1:])
     
-    x.to_csv("movielens_features_filtered_"+lab+".csv",index=False)
+    x.to_csv("../../movielens_features_filtered_"+lab+".csv",index=False)
 
 
 
