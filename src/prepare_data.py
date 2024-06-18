@@ -159,7 +159,6 @@ def prepare_Movielens():
     edges['T'] = edges['T'].astype(int)
 
     # derive the mappings
-    user_map = {j:i for i,j in enumerate(edges['user'].unique())}
     product_map = {j:i for i,j in enumerate(edges['product'].unique())}
 
     edges['user'] = edges['user'].map(user_map)
