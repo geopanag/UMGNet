@@ -8,9 +8,7 @@ import numpy as np
 import torch
 from torch_geometric.data import InMemoryDataset, Data, HeteroData, download_url
 from sklearn.preprocessing import StandardScaler
-import requests
 import zipfile
-import os
 
 
 
