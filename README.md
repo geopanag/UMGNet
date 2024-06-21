@@ -8,12 +8,15 @@ pip install -r requirements.txt
 ```
 
 ## Data
-Download the [RetailHero](https://ods.ai/competitions/x5-retailhero-uplift-modeling/data) into the folder data/RetailHero and the [Movielens25](https://grouplens.org/datasets/movielens/25m/) into folder data/Movielens25.
-Then run:
+The script
 
 ```bash
 python prepare_data.py
 ```
+
+downloads and processes the [RetailHero](https://ods.ai/competitions/x5-retailhero-uplift-modeling/data) into the folder data/retailhero and the [Movielens25](https://grouplens.org/datasets/movielens/25m/) into folder data/movielens.
+
+
 
 ## Run benchmarkcs
 

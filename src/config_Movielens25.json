@@ -1,6 +1,6 @@
 {
 "dataset":"movielens",
-"path_to_data":"../data/Movielens25",
+"path_to_data":"../data/movielens",
 "num_epochs" : 2000,
 "early_stopping_threshold":100,
 "lr" : 0.01,
@@ -11,10 +11,9 @@
 "no_layers" :1,
 "number_of_runs":5,
 "with_label_prop" : 0,
-"user_feature_file" : "movielens_features_filtered_X.csv",
-"edge_index_file" : "movielens_graph_filtered_X.csv",
-"output_file" : "movielens_y_run_filtered_X.csv",
-"model_file" : "model_version_v4.pt",  
+"feature_file" : "movielens_features.csv",
+"edge_index_file" : "movielens_graph.csv",
+"model_file" : "../../model_version.pt",  
 "results_file_name" : "results_version.csv",
-"causalml_dml_results" : "causalml_dml_results_version.csv"
+"causalml_dml_results" : "benchmark_results_file.csv"
 }

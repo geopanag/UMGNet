@@ -39,7 +39,7 @@ def main():
     repr_balance = False
     
     edge_index_df = pd.read_csv(config["edge_index_file"])
-    features = pd.read_csv(config["user_feature_file"])
+    features = pd.read_csv(config["feature_file"])
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
     num_products = len(edge_index_df['product'].unique())

@@ -25,8 +25,8 @@ def main(config_file):
     dataset = config['dataset']
     number_of_runs = config["number_of_runs"]
     
-    user_feature_file = config["user_feature_file"]
-    df = pd.read_csv(user_feature_file)
+
+    df = pd.read_csv(config["feature_file"])
     
     if dataset=="retail":
         columns_to_use = [ 'age','F','M','U','first_issue_abs_time','first_redeem_abs_time','redeem_delay'] 
@@ -44,7 +44,7 @@ def main(config_file):
     else:
         tasks = [3]
         dats = 5
-        features = pd.read_csv(config['user_feature_file'])#"movielens_features.csv")
+        features = pd.read_csv(config['feature_file'])#"movielens_features.csv")
         treatment = features.values[:,0].astype(int)
         confounders = features.values[:,1:]
 
@@ -55,9 +55,9 @@ def main(config_file):
              
                 dataset_ = dataset+str(dat)
 
-                v = "benchmarks_"+dataset_+"_"+str(k)+"_"+str(task)
+                v = dataset_+"_"+str(k)+"_"+str(task)
                 
-                causalml_dml_results_file = config['causalml_dml_results'].replace("version",str(v))
+                results_file = config['benchmark_results_file'].replace("version",str(v))
 
 
                 result = pd.DataFrame()
@@ -109,13 +109,15 @@ def main(config_file):
                     p = pd.Series( list(causalml_results.round(4).mean().values.T)+["Dragon"] )
                     result = pd.concat([result,p],axis=1)
                     print("dragon done")
-                    result.T.to_csv(causalml_dml_results_file.replace("dml","all"),index=False) # CEVAE takes too long to run
+                    result.T.to_csv(results_file.replace("dml","all"),index=False) 
+                    
+                    # CEVAE takes too long to run
 
                     causalml_results = test_causalml(confounders, outcome, treatment, k, task, "CEVAE",random_seed=run)
                     p = pd.Series( list(causalml_results.round(4).mean().values.T)+["CEVAE"] )
                     result = pd.concat([result,p],axis=1)
                     print("CEVAE done")
-                    result.T.to_csv(causalml_dml_results_file.replace("dml","all"),index=False)
+                    result.T.to_csv(results_file.replace("dml","all"),index=False)
                 
 
 

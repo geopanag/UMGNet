@@ -314,11 +314,11 @@ class MovieLens25(InMemoryDataset):
 
 
 def main():
-    os.makedirs('../data/retailhero_pyg', exist_ok=True)
-    os.makedirs('../data/movielens_pyg', exist_ok=True)
-    dataset = RetailHero(root='../data/retailhero_pyg')
+    os.makedirs('../data/retailhero', exist_ok=True)
+    os.makedirs('../data/movielens', exist_ok=True)
+    dataset = RetailHero(root='../data/retailhero')
     data = dataset[0]
-    dataset = MovieLens25(root='../data/movielens_pyg')
+    dataset = MovieLens25(root='../data/movielens')
     data = dataset[0]
 
 

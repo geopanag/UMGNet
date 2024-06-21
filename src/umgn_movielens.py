@@ -41,48 +41,45 @@ def main():
     
     edge_index_df = pd.read_csv(config["edge_index_file"])
     
-    num_products = len(edge_index_df['product'].unique())
+    num_products = len(edge_index_df['user'].unique())
     
-    features = pd.read_csv(config["user_feature_file"])
+    features = pd.read_csv(config["feature_file"])
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    edge_index = torch.tensor(edge_index_df[['user','product']].values).type(torch.LongTensor).T.to(device)
+    edge_index = torch.tensor(edge_index_df[['movie','user']].values).type(torch.LongTensor).T.to(device)
     
     treatment = torch.tensor( features.values[:,0].astype(int)).type(torch.LongTensor).to(device)
-    
+    outcome = torch.tensor( features.values[:,1].astype(int)).type(torch.FloatTensor).to(device)
+
     confounders = StandardScaler().fit_transform(features.values[:,1:])
     
     xu = torch.tensor(confounders).type(torch.FloatTensor).to(device)
     
     xp = torch.eye(num_products).to(device)
     
-    
-    for dat in range(5):
-        outcome =  torch.tensor(pd.read_csv(config['output_file'].replace("run",str(dat))).squeeze().values).type(torch.FloatTensor).to(device)
-        for k in [5,20]: 
-            print(task)
-            torch.cuda.empty_cache()
+    # for dat in range(5):
+        
+    for k in [5,20]: 
+        print(task)
+        torch.cuda.empty_cache()
+        v = "umgn_"+dataset+str(lr)+"_"+str(n_hidden)+"_"+str(num_epochs)+"_"+str(dropout)+"_"+str(with_lp)+"_"+str(k)+"_"+str(task)
 
-            dataset_ = dataset+str(dat)
+        model_file = model_file_name.replace("version",str(v))
+        results_file = results_file_name.replace("version",str(v))
 
-            v = "umgn_"+dataset_+str(lr)+"_"+str(n_hidden)+"_"+str(num_epochs)+"_"+str(dropout)+"_"+str(with_lp)+"_"+str(k)+"_"+str(task)
+        result_version = []
+        for run in range(number_of_runs):
+            np.random.seed(run)
+            random.seed(run)
+            torch.manual_seed(run)
 
-            model_file = model_file_name.replace("version",str(v))
-            results_file = results_file_name.replace("version",str(v))
+            criterion = outcome_regression_loss
 
-            result_version = []
-            for run in range(number_of_runs):
-                np.random.seed(run)
-                random.seed(run)
-                torch.manual_seed(run)
+            num_users = int(treatment.shape[0])
 
-                criterion = outcome_regression_loss
+            result_fold = run_umgnn(outcome, treatment, criterion, xu, xp, edge_index, edge_index_df, task, n_hidden, out_channels, no_layers, k, run, model_file, num_users, num_products, with_lp, alpha, l2_reg, dropout, lr, num_epochs, early_thres,repr_balance, device)
+            result_version.append(result_fold)
 
-                num_users = int(treatment.shape[0])
-
-                result_fold = run_umgnn(outcome, treatment, criterion, xu, xp, edge_index, edge_index_df, task, n_hidden, out_channels, no_layers, k, run, model_file, num_users, num_products, with_lp, alpha, l2_reg, dropout, lr, num_epochs, early_thres,repr_balance, device)
-                result_version.append(result_fold)
-
-                pd.DataFrame(result_version).to_csv(results_file,index=False)
+            pd.DataFrame(result_version).to_csv(results_file,index=False)
 
 
 

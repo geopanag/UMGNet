@@ -205,7 +205,7 @@ def main():
     repr_balance = False
 
     edge_index_df = pd.read_csv(config["edge_index_file"])
-    features = pd.read_csv(config["user_feature_file"])
+    features = pd.read_csv(config["feature_file"])
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
     edge_index = torch.tensor(edge_index_df[['user','product']].values).type(torch.LongTensor).T.to(device)
