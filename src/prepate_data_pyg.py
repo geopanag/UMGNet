@@ -239,7 +239,6 @@ class MovieLens25(InMemoryDataset):
 
     def process(self, ratings_dataset:str = "ml-25m/ratings.csv", movies_dataset:str ="ml-25m/movies.csv", user_threshold:int = 200):
         #===== graph
-        
         edge_index_df = pd.read_csv(f'{self.raw_dir}/{ratings_dataset}')
         edge_index_df = edge_index_df[['movieId','userId','rating']]
         edge_index_df.columns = ['movie','user','weight']
@@ -317,10 +316,12 @@ class MovieLens25(InMemoryDataset):
 
 
 def main():
-    #dataset = RetailHero(root='/home/georgios/Desktop/research/gnn_uplift/experiment/data/retail_pyg')
-    dataset = MovieLens25(root='/home/georgios/Desktop/research/gnn_uplift/experiment/data/movielens_pyg')
-
-    #data = dataset[0]
+    os.makedirs('../data/retailhero_pyg', exist_ok=True)
+    os.makedirs('../data/movielens_pyg', exist_ok=True)
+    dataset = RetailHero(root='../data/retailhero_pyg')
+    data = dataset[0]
+    dataset = MovieLens25(root='../data/movielens_pyg')
+    data = dataset[0]
 
 
 
