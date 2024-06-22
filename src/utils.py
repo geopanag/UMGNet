@@ -38,6 +38,7 @@ def run_umgnn(outcome: torch.tensor , treatment: torch.tensor, criterion: torch.
               model_file: str, num_users: int, num_products:int , with_lp: bool, alpha: float, l2_reg: float, 
               dropout: float, lr: float, num_epochs: int, early_thres: int,repr_balance: bool, device:torch.device, 
               validation_fraction: int =5) -> np.ndarray:
+    
     #------ K fold split
     kf = KFold(n_splits=abs(k), shuffle=True, random_state=run)
     result_fold = []
@@ -230,7 +231,7 @@ def binary_treatment_loss(t_true, t_pred):
 
 def outcome_regression_loss_dragnn(t_true: torch.tensor,y_treatment_pred: torch.tensor, y_control_pred: torch.tensor, t_pred: torch.tensor, y_true: torch.tensor):
     """
-    Compute binary cross entropy for treatment and control output layers using treatment vector for masking 
+    Compute mse for treatment and control output layers using treatment vector for masking 
     """
    
     loss0 = torch.mean((1. - t_true) * F.mse_loss(y_control_pred.squeeze(), y_true, reduction='none')) 
@@ -256,9 +257,9 @@ def binary_treatment_loss(t_true, t_pred):
 
 
 
-def outcome_regression_loss(t_true: torch.tensor,y_treatment_pred: torch.tensor, y_control_pred: torch.tensor, y_true: torch.tensor):
+def outcome_regression_loss(t_true: torch.tensor,y_treatment_pred: torch.tensor, y_control_pred: torch.tensor, y_true: torch.tensor) -> torch.tensor:
     """
-    Compute binary cross entropy for treatment and control output layers using treatment vector for masking 
+    Compute mse for treatment and control output layers using treatment vector for masking out the counterfactual predictions
     """
     loss0 = torch.mean((1. - t_true) * F.mse_loss(y_control_pred.squeeze(), y_true, reduction='none')) 
     loss1 = torch.mean(t_true *  F.mse_loss(y_treatment_pred.squeeze(), y_true, reduction='none') )
@@ -340,14 +341,17 @@ def make_outcome_feature(x, train_indices, y):
     return y
     
 
-
-def uplift_score(prediction, treatment, target, rate=0.2):
+def uplift_score(prediction, treatment, target, rate=0.2) -> float:
     """
     From https://ods.ai/competitions/x5-retailhero-uplift-modeling/data
+    Order the samples by the predicted uplift. 
+    Calculate the average ground truth outcome of the top rate*100% of the treated and the control samples.
+    Subtract the above to get the uplift. 
     """
     order = np.argsort(-prediction)
     treatment_n = int((treatment == 1).sum() * rate)
     treatment_p = target[order][treatment[order] == 1][:treatment_n].mean()
+
     control_n = int((treatment == 0).sum() * rate)
     control_p = target[order][treatment[order] == 0][:control_n].mean()
     score = treatment_p - control_p

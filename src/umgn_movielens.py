@@ -50,8 +50,6 @@ def main():
     treatment = torch.tensor( features.values[:,0].astype(int)).type(torch.LongTensor).to(device)
     outcome = torch.tensor( features.values[:,1].astype(int)).type(torch.FloatTensor).to(device)
 
-    confounders = StandardScaler().fit_transform(features.values[:,1:])
-    
     xu = torch.tensor(confounders).type(torch.FloatTensor).to(device)
     
     xp = torch.eye(num_products).to(device)

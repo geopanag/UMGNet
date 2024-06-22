@@ -3,7 +3,6 @@ import numpy as np
 import torch
 from torch_geometric.nn import GCNConv
 from tqdm import tqdm
-import torch.nn as nn
 from torch import nn, optim, Tensor
 
 import torch.nn.functional as F

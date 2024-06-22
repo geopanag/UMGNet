@@ -149,7 +149,6 @@ class RetailHero(InMemoryDataset):
 
         weighted_degrees = dict(zip(weighted_degrees['user'], weighted_degrees['weight']))
 
-        
         ## add targets
         data = df_features.join(features_purchases_before).join(labels_purchases_after).fillna(0)
 
@@ -170,6 +169,7 @@ class RetailHero(InMemoryDataset):
         data = data[treatment + labels + features]
 
         data.to_csv(f'{self.processed_dir}/{features_file}', index=False)
+        
         edge_index_df = pd.read_csv(f'{self.processed_dir}/{edge_index_file}')
         features = pd.read_csv(f'{self.processed_dir}/{features_file}')
 

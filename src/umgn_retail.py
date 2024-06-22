@@ -3,7 +3,6 @@ import os
 import numpy as np
 import json 
 import torch
-from sklearn.preprocessing import StandardScaler
 
 
 from utils import  outcome_regression_loss, run_umgnn
@@ -45,11 +44,6 @@ def main():
     num_products = len(edge_index_df['product'].unique())
     edge_index = torch.tensor(edge_index_df[['user','product']].values).type(torch.LongTensor).T.to(device)
     
-    columns_to_norm = ['age','first_issue_abs_time','first_redeem_abs_time','redeem_delay','degree_before','weighted_degree_before'] 
-    if len(columns_to_norm)>0:
-        normalized_data = StandardScaler().fit_transform(features[columns_to_norm])
-        features[columns_to_norm] = normalized_data
-
     # extract the features and the labels
     treatment =torch.tensor( features['treatment_flg'].values).type(torch.LongTensor).to(device)
     #outcome_original = torch.tensor(features['target'].values).type(torch.FloatTensor).to(device)
@@ -64,7 +58,7 @@ def main():
     for k in [5, 20]:
         for task in [1,2]:
             features_tmp  = features[['age','F','M','U','first_issue_abs_time','first_redeem_abs_time','redeem_delay'] ]
-            print( features_tmp.columns)
+
             xu = torch.tensor(features_tmp.values).type(torch.FloatTensor).to(device)
 
             torch.cuda.empty_cache()

@@ -7,7 +7,6 @@ from torch.optim import Adam
 
 import json 
 
-from sklearn.preprocessing import StandardScaler
 
 from utils import uplift_score, make_outcome_feature, cluster, mc_dropout, outcome_regression_loss, al_lp
 
@@ -226,11 +225,7 @@ def main():
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     edge_index = torch.tensor(edge_index_df[['user','product']].values).type(torch.LongTensor).T.to(device)
 
-    columns_to_norm = ['age','first_issue_abs_time','first_redeem_abs_time','redeem_delay','degree_before','weighted_degree_before'] 
-    if len(columns_to_norm)>0:
-        normalized_data = StandardScaler().fit_transform(features[columns_to_norm])
-        features[columns_to_norm] = normalized_data
-
+    
     # extract the features and the labels
     treatment =torch.tensor( features['treatment_flg'].values).type(torch.LongTensor).to(device)
     outcome_original = torch.tensor(features['target'].values).type(torch.FloatTensor).to(device)
