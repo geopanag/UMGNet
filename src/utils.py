@@ -126,9 +126,6 @@ def run_umgnn(outcome: torch.tensor , treatment: torch.tensor, criterion: torch.
                     val_loss = round(float(loss.item()),3)
                     val_losses.append(val_loss)
 
-                    #-------------------------------------------------------------------------------------------
-                    #torch.save(model, model_file) 
-                    #-------------------------------------------------------------------------------------------
                     if val_loss < best_val_loss:
                         early_stopping=0
                         best_val_loss = val_loss 

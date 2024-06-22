@@ -13,6 +13,7 @@ import sys
 import argparse
 
 
+
 def main(config_file):
     
     with open(config_file, 'r') as config_file:
@@ -25,7 +26,6 @@ def main(config_file):
     dataset = config['dataset']
     number_of_runs = config["number_of_runs"]
     
-
     df = pd.read_csv(config["feature_file"])
     
     if dataset=="retail":
