@@ -242,18 +242,6 @@ def outcome_regression_loss_dragnn(t_true: torch.tensor,y_treatment_pred: torch.
 
 
 
-def binary_treatment_loss(t_true, t_pred):
-    """
-    Compute cross entropy for propensity score
-    """
-    t_pred = (t_pred + 0.001) / 1.002
-    losst = torch.sum(F.binary_cross_entropy(t_pred.squeeze(), t_true))
-
-    return losst
-
-
-
-
 def outcome_regression_loss(t_true: torch.tensor,y_treatment_pred: torch.tensor, y_control_pred: torch.tensor, y_true: torch.tensor) -> torch.tensor:
     """
     Compute mse for treatment and control output layers using treatment vector for masking out the counterfactual predictions
