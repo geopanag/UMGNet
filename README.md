@@ -1,6 +1,6 @@
 # Uplift Modeling under Limited Supervision
 
-The code to reproduce the analysis for "Uplift Modeling under Limited Supervision".
+The code to reproduce the analysis for ["Uplift Modeling under Limited Supervision"](https://hal.science/hal-04601553/document).
 
 Start by installing the requirements.
 ```bash
