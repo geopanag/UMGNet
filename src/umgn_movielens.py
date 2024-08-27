@@ -48,36 +48,38 @@ def main():
     edge_index = torch.tensor(edge_index_df[['movie','user']].values).type(torch.LongTensor).T.to(device)
     
     treatment = torch.tensor( features.values[:,0].astype(int)).type(torch.LongTensor).to(device)
-    outcome = torch.tensor( features.values[:,1].astype(int)).type(torch.FloatTensor).to(device)
+    #outcome = torch.tensor( features.values[:,1].astype(int)).type(torch.FloatTensor).to(device)
+
+    confounders = StandardScaler().fit_transform(features.values[:,2:])
 
     xu = torch.tensor(confounders).type(torch.FloatTensor).to(device)
     
     xp = torch.eye(num_products).to(device)
     
-    # for dat in range(5):
+    for dat in range(5):
+        outcome = torch.tensor(pd.read_csv(f'movielens_y_{dat}.csv').squeeze().values).type(torch.FloatTensor).to(device)
         
-    for k in [5,20]: 
-        print(task)
-        torch.cuda.empty_cache()
-        v = "umgn_"+dataset+str(lr)+"_"+str(n_hidden)+"_"+str(num_epochs)+"_"+str(dropout)+"_"+str(with_lp)+"_"+str(k)+"_"+str(task)
+        for k in [5,20]: 
+            torch.cuda.empty_cache()
+            v = "umgn_"+dataset+str(lr)+"_"+str(n_hidden)+"_"+str(num_epochs)+"_"+str(dropout)+"_"+str(with_lp)+"_"+str(k)+"_"+str(task)+"_"+str(dat)
 
-        model_file = model_file_name.replace("version",str(v))
-        results_file = results_file_name.replace("version",str(v))
+            model_file = model_file_name.replace("version",str(v))
+            results_file = results_file_name.replace("version",str(v))
 
-        result_version = []
-        for run in range(number_of_runs):
-            np.random.seed(run)
-            random.seed(run)
-            torch.manual_seed(run)
+            result_version = []
+            for run in range(number_of_runs):
+                np.random.seed(run)
+                random.seed(run)
+                torch.manual_seed(run)
 
-            criterion = outcome_regression_loss
+                criterion = outcome_regression_loss
 
-            num_users = int(treatment.shape[0])
+                num_users = int(treatment.shape[0])
 
-            result_fold = run_umgnn(outcome, treatment, criterion, xu, xp, edge_index, edge_index_df, task, n_hidden, out_channels, no_layers, k, run, model_file, num_users, num_products, with_lp, alpha, l2_reg, dropout, lr, num_epochs, early_thres,repr_balance, device)
-            result_version.append(result_fold)
+                result_fold = run_umgnn(outcome, treatment, criterion, xu, xp, edge_index, edge_index_df, task, n_hidden, out_channels, no_layers, k, run, model_file, num_users, num_products, with_lp, alpha, l2_reg, dropout, lr, num_epochs, early_thres,repr_balance, device)
+                result_version.append(result_fold)
 
-            pd.DataFrame(result_version).to_csv(results_file,index=False)
+                pd.DataFrame(result_version).to_csv(results_file,index=False)
 
 
 
