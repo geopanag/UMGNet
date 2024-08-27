@@ -36,12 +36,6 @@ class RetailHero(InMemoryDataset):
     def download(self):
         #os.makedirs(extract_to, exist_ok=True)
         local_filename = self.url.split('/')[-1]
-        #with requests.get(url, stream=True) as r:
-        #    r.raise_for_status()
-        #    with open(local_filename, 'wb') as f:
-        #        for chunk in r.iter_content(chunk_size=8192): 
-        #            f.write(chunk)
-        
         download_url(f'{self.url}', self.raw_dir)
         # Unzip the file
         with zipfile.ZipFile(f'{self.raw_dir}/{local_filename}', 'r') as zip_ref:
@@ -291,10 +285,10 @@ class MovieLens25(InMemoryDataset):
         features = pd.DataFrame(features).sort_values(0)
         features = pd.DataFrame(features.values[:,1:])
 
+        #-------------------- hardcoded outcome
         features.to_csv(f'{self.processed_dir}/movielens_features.csv',index=False)
         
         normalized_data = StandardScaler().fit_transform(features.iloc[:,2:].values)
-
 
         data = HeteroData()
         data['movie', 'ratedby', 'user'] = {'edge_index' : torch.tensor(edge_index_df[['movie','user']].values).type(torch.LongTensor).T,
@@ -306,10 +300,26 @@ class MovieLens25(InMemoryDataset):
                         "y" : torch.tensor(features.iloc[:,1].values).type(torch.FloatTensor)}
         data['users'] = {"num_users":len(edge_index_df['user'].unique())}
 
-        #data = Data(x=xu, edge_index=edge_index, treatment=treatment, outcome_money=outcome_money, outcome_change=outcome_change)
         data_list = [data]
         data, slices = self.collate(data_list)
         torch.save((data, slices), self.processed_paths[0])
+
+        #-------------------- simulated outcomes
+        x = features.values
+        mean = 10
+        std_dev = 5 
+        bound = 10
+        # Number of samples to generate
+        for dat in range(5):
+            np.random.seed(dat)
+            # Generate random Gaussian noise
+            random_noise = np.random.normal(mean, std_dev, x.shape[0])
+            random_wf = np.random.uniform(bound, 2*bound, size=x.shape[1]-1)
+            random_wt = np.random.uniform(bound, 2*bound, size=1)
+            Y = np.maximum(0,x[:,0]*random_wt+x[:,1:].dot(random_wf)+random_noise)
+            pd.DataFrame(Y).to_csv(f'movielens_y_{dat}.csv',index=False)
+
+        
 
 
 
