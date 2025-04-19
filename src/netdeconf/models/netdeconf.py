@@ -8,7 +8,6 @@ class GCN_DECONF(nn.Module):
     def __init__(self, nfeat, nhid, dropout, num_users, n_in=1, n_out=1, cuda=False):
         super(GCN_DECONF, self).__init__()
 
-
         # self.gc2 = GraphConvolution(nhid, nclass)
 
         self.num_users = num_users
@@ -21,22 +20,22 @@ class GCN_DECONF(nn.Module):
             self.gc = [GraphConvolution(nfeat, nhid, first=True)]
             for i in range(n_in - 1):
                 self.gc.append(GraphConvolution(nhid, nhid))
-        
+
         self.n_in = n_in
         self.n_out = n_out
 
         if cuda:
 
-            self.out_t00 = [nn.Linear(nhid,nhid).cuda() for i in range(n_out)]
-            self.out_t10 = [nn.Linear(nhid,nhid).cuda() for i in range(n_out)]
-            self.out_t01 = nn.Linear(nhid,1).cuda()
-            self.out_t11 = nn.Linear(nhid,1).cuda()
+            self.out_t00 = [nn.Linear(nhid, nhid).cuda() for i in range(n_out)]
+            self.out_t10 = [nn.Linear(nhid, nhid).cuda() for i in range(n_out)]
+            self.out_t01 = nn.Linear(nhid, 1).cuda()
+            self.out_t11 = nn.Linear(nhid, 1).cuda()
 
         else:
-            self.out_t00 = [nn.Linear(nhid,nhid) for i in range(n_out)]
-            self.out_t10 = [nn.Linear(nhid,nhid) for i in range(n_out)]
-            self.out_t01 = nn.Linear(nhid,1)
-            self.out_t11 = nn.Linear(nhid,1)
+            self.out_t00 = [nn.Linear(nhid, nhid) for i in range(n_out)]
+            self.out_t10 = [nn.Linear(nhid, nhid) for i in range(n_out)]
+            self.out_t01 = nn.Linear(nhid, 1)
+            self.out_t11 = nn.Linear(nhid, 1)
 
         self.dropout = dropout
 
@@ -55,7 +54,7 @@ class GCN_DECONF(nn.Module):
             rep = F.relu(self.gc[i](rep, adj))
             rep = F.dropout(rep, self.dropout, training=self.training)
 
-        rep = rep[:self.num_users]
+        rep = rep[: self.num_users]
 
         for i in range(self.n_out):
 
@@ -63,12 +62,12 @@ class GCN_DECONF(nn.Module):
             y00 = F.dropout(y00, self.dropout, training=self.training)
             y10 = F.relu(self.out_t10[i](rep))
             y10 = F.dropout(y10, self.dropout, training=self.training)
-        
+
         y0 = self.out_t01(y00).view(-1)
         y1 = self.out_t11(y10).view(-1)
 
         # print(t.shape,y1.shape,y0.shape)
-        y = torch.where(t > 0,y1,y0)
+        y = torch.where(t > 0, y1, y0)
 
         p1 = self.pp_act(self.pp(rep)).view(-1)
 

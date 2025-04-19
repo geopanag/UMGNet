@@ -56,7 +56,10 @@ def run_experiment(cfg: DictConfig):
             y_test,
             t_test,
         ) = fetch_sample_data(
-            random_state=cfg["random_state"], test_size=0.25, StandardScaler=cfg["StandardScaler"], data_path=hydra.utils.get_original_cwd() + "/data/sample_data.csv"
+            random_state=cfg["random_state"],
+            test_size=0.25,
+            StandardScaler=cfg["StandardScaler"],
+            data_path=hydra.utils.get_original_cwd() + "/data/sample_data.csv",
         )
         model = CFR(in_dim=8, out_dim=1, cfg=cfg)
         within_result, outof_result, train_mse, ipm_result = model.fit(

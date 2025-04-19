@@ -20,7 +20,7 @@ def get_score(model, x_test, y_test, t_test):
 
     # MSE
     _ypred = model.forward(x_test, t_test)
-    #mse = mean_squared_error(y_test, _ypred)
+    # mse = mean_squared_error(y_test, _ypred)
 
     # treatment index
     t_idx = np.where(t_test.to("cpu").detach().numpy().copy() == 1)[0]
@@ -34,9 +34,9 @@ def get_score(model, x_test, y_test, t_test):
     _cate_t = y_test - model.forward(x_test, _t0)
     _cate_c = model.forward(x_test, _t1) - y_test
     _cate = torch.cat([_cate_c[c_idx], _cate_t[t_idx]])
-    
+
     _ate = np.mean(_cate.to("cpu").detach().numpy().copy())
-    #_att = np.mean(_cate_t[t_idx].to("cpu").detach().numpy().copy())
+    # _att = np.mean(_cate_t[t_idx].to("cpu").detach().numpy().copy())
 
     return {"ATE": _ate}
 
@@ -45,7 +45,7 @@ class Base(nn.Module):
     def __init__(self, cfg):
         super(Base, self).__init__()
         self.cfg = cfg
-        self.criterion = nn.MSELoss(reduction='none')
+        self.criterion = nn.MSELoss(reduction="none")
         self.mse = mean_squared_error
 
     def fit(
@@ -65,7 +65,7 @@ class Base(nn.Module):
             epoch_loss = 0
             epoch_ipm = []
             n = 0
-            for (x, y, z) in dataloader:
+            for x, y, z in dataloader:
 
                 x = x.to(device=device).float()
                 y = y.to(device=device).float()
@@ -90,17 +90,17 @@ class Base(nn.Module):
                 loss = self.criterion(y_hat, y.reshape([-1, 1]))
                 # sample weight
                 p_t = np.mean(z.cpu().detach().numpy())
-                w_t = z/(2*p_t)
-                w_c = (1-z)/(2*1-p_t)
+                w_t = z / (2 * p_t)
+                w_c = (1 - z) / (2 * 1 - p_t)
                 sample_weight = w_t + w_c
-                if (p_t ==1) or (p_t ==0):
+                if (p_t == 1) or (p_t == 0):
                     sample_weight = 1
-                
-                loss =torch.mean((loss * sample_weight))
 
-                if self.cfg["alpha"] > 0.0:    
+                loss = torch.mean((loss * sample_weight))
+
+                if self.cfg["alpha"] > 0.0:
                     if self.cfg["ipm_type"] == "mmd_rbf":
-                       ipm = mmd_rbf(
+                        ipm = mmd_rbf(
                             x_rep[_t_id],
                             x_rep[_c_id],
                             p=len(_t_id) / (len(_t_id) + len(_c_id)),
@@ -110,7 +110,7 @@ class Base(nn.Module):
                         ipm = mmd_lin(
                             x_rep[_t_id],
                             x_rep[_c_id],
-                            p=len(_t_id) / (len(_t_id) + len(_c_id))
+                            p=len(_t_id) / (len(_t_id) + len(_c_id)),
                         )
                     else:
                         sys.exit()
@@ -118,12 +118,11 @@ class Base(nn.Module):
                     loss += ipm * self.cfg["alpha"]
                     epoch_ipm.append(ipm.cpu().detach().numpy())
 
-                
                 mse = self.mse(
                     y_hat.detach().cpu().numpy(),
                     y.reshape([-1, 1]).detach().cpu().numpy(),
                 )
-                
+
                 loss.backward()
 
                 self.optimizer.step()
@@ -138,12 +137,11 @@ class Base(nn.Module):
 
             if epoch % 50 == 0:
                 with torch.no_grad():
-                    print(f'epoch {epoch}')
-                    #within_result = get_score(self, x_train, y_train, t_train)
-                    #outof_result = get_score(self, x_test, y_test, t_test)
-                    #print(f'epoch {epoch} train : {within_result["ATE"]}, test : {outof_result["ATE"]}')
-            #        
-                
+                    print(f"epoch {epoch}")
+                    # within_result = get_score(self, x_train, y_train, t_train)
+                    # outof_result = get_score(self, x_test, y_test, t_test)
+                    # print(f'epoch {epoch} train : {within_result["ATE"]}, test : {outof_result["ATE"]}')
+            #
 
         return losses, ipm_result
 
@@ -164,10 +162,18 @@ class CFR(Base):
         if cfg["split_outnet"]:
 
             self.outnet_treated = MLP(
-                in_dim=cfg["repnet_out_dim"], out_dim=out_dim, num_layers=cfg["outnet_num_layers"], hidden_dim=cfg["outnet_hidden_dim"], dropout=cfg["outnet_dropout"]
+                in_dim=cfg["repnet_out_dim"],
+                out_dim=out_dim,
+                num_layers=cfg["outnet_num_layers"],
+                hidden_dim=cfg["outnet_hidden_dim"],
+                dropout=cfg["outnet_dropout"],
             )
             self.outnet_control = MLP(
-                in_dim=cfg["repnet_out_dim"], out_dim=out_dim, num_layers=cfg["outnet_num_layers"], hidden_dim=cfg["outnet_hidden_dim"], dropout=cfg["outnet_dropout"]
+                in_dim=cfg["repnet_out_dim"],
+                out_dim=out_dim,
+                num_layers=cfg["outnet_num_layers"],
+                hidden_dim=cfg["outnet_hidden_dim"],
+                dropout=cfg["outnet_dropout"],
             )
 
             self.params = (
@@ -177,12 +183,15 @@ class CFR(Base):
             )
         else:
             self.outnet = MLP(
-                in_dim=cfg["repnet_out_dim"] + 1, out_dim=out_dim, num_layers=cfg["outnet_num_layers"], hidden_dim=cfg["outnet_hidden_dim"], dropout=cfg["outnet_dropout"]
+                in_dim=cfg["repnet_out_dim"] + 1,
+                out_dim=out_dim,
+                num_layers=cfg["outnet_num_layers"],
+                hidden_dim=cfg["outnet_hidden_dim"],
+                dropout=cfg["outnet_dropout"],
             )
 
-            self.params = (
-                list(self.repnet.parameters())
-                + list(self.outnet.parameters())
+            self.params = list(self.repnet.parameters()) + list(
+                self.outnet.parameters()
             )
 
         self.optimizer = optim.Adam(

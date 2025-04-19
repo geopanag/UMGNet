@@ -8,7 +8,6 @@ import numpy as np
 import torch
 
 
-
 def torch_fix_seed(seed=0):
     # Python random
     random.seed(seed)
@@ -33,11 +32,18 @@ class DataSet:
     def __getitem__(self, index):
         return self.x[index, :], self.y[index], self.z[index, :]
 
-def ndarray_to_tensor(x):
-        x = torch.tensor(x).float()
-        return x
 
-def fetch_sample_data(random_state=0, test_size=0.15, StandardScaler=False, data_path="data/sample_data.csv"):
+def ndarray_to_tensor(x):
+    x = torch.tensor(x).float()
+    return x
+
+
+def fetch_sample_data(
+    random_state=0,
+    test_size=0.15,
+    StandardScaler=False,
+    data_path="data/sample_data.csv",
+):
     if os.path.isfile(data_path):
         df = pd.read_csv(data_path)
     else:
@@ -46,7 +52,9 @@ def fetch_sample_data(random_state=0, test_size=0.15, StandardScaler=False, data
 
         df = pd.concat(
             [
-                pd.read_stata(RCT_DATA).query("treat>0"),  # (失業者介入実験データ)nsw data の介入群のみ抽出
+                pd.read_stata(RCT_DATA).query(
+                    "treat>0"
+                ),  # (失業者介入実験データ)nsw data の介入群のみ抽出
                 pd.read_stata(CPS_DATA),  # 別のセンサスデータ
             ]
         ).reset_index(drop=True)
@@ -59,10 +67,12 @@ def fetch_sample_data(random_state=0, test_size=0.15, StandardScaler=False, data
     if StandardScaler:
         features_cols = [col for col in df.columns if col not in ["treat", "re78"]]
         ss = preprocessing.StandardScaler()
-        df_std = pd.DataFrame(ss.fit_transform(df[features_cols]), columns=features_cols)
+        df_std = pd.DataFrame(
+            ss.fit_transform(df[features_cols]), columns=features_cols
+        )
         df_std = pd.concat([df[["treat", "re78"]], df_std], axis=1)
         df = df_std.copy()
-    
+
     X_train, X_test, y_train, y_test, t_train, t_test = train_test_split(
         df.drop(["re78", "treat"], axis=1),
         df[["re78"]],
@@ -70,7 +80,6 @@ def fetch_sample_data(random_state=0, test_size=0.15, StandardScaler=False, data
         random_state=random_state,
         test_size=test_size,
     )
-
 
     X_train = torch.FloatTensor(X_train.to_numpy())
     y_train = torch.FloatTensor(y_train.to_numpy())
@@ -81,9 +90,12 @@ def fetch_sample_data(random_state=0, test_size=0.15, StandardScaler=False, data
     t_test = torch.FloatTensor(t_test.to_numpy())
 
     dataset = DataSet(X_train, y_train, t_train)
-    dataloader = torch.utils.data.DataLoader(dataset, batch_size=50, shuffle=True, drop_last=True)
+    dataloader = torch.utils.data.DataLoader(
+        dataset, batch_size=50, shuffle=True, drop_last=True
+    )
 
-    return  dataloader, X_train, y_train, t_train, X_test, y_test, t_test
+    return dataloader, X_train, y_train, t_train, X_test, y_test, t_test
+
 
 def mmd_rbf(Xt, Xc, p, sig=0.1):
     sig = torch.tensor(sig)
@@ -94,18 +106,19 @@ def mmd_rbf(Xt, Xc, p, sig=0.1):
     m = Xc.shape[0]
     n = Xt.shape[0]
 
-    mmd = (1 - p) ** 2 / (m *(m-1)) * (Kcc.sum() - m)
-    mmd += p ** 2 / (n * (n-1)) * (Ktt.sum() - n)
+    mmd = (1 - p) ** 2 / (m * (m - 1)) * (Kcc.sum() - m)
+    mmd += p**2 / (n * (n - 1)) * (Ktt.sum() - n)
     mmd -= 2 * p * (1 - p) / (m * n) * Kct.sum()
     mmd *= 4
 
     return mmd
 
+
 def mmd_lin(Xt, Xc, p):
     mean_treated = torch.mean(Xt)
     mean_control = torch.mean(Xc)
-    
-    mmd = torch.square(2.0*p*mean_treated - 2.0*(1.0-p)*mean_control).sum()
+
+    mmd = torch.square(2.0 * p * mean_treated - 2.0 * (1.0 - p) * mean_control).sum()
 
     return mmd
 
@@ -115,27 +128,21 @@ def ipm_scores(model, X, _t, sig=0.1):
     _c_id = np.where((_t.cpu().detach().numpy() == 0).all(axis=1))[0]
     x_rep = model.repnet(X)
     ipm_lin = mmd_lin(
-                    x_rep[_t_id],
-                    x_rep[_c_id],
-                    p=len(_t_id) / (len(_t_id) + len(_c_id))
+        x_rep[_t_id], x_rep[_c_id], p=len(_t_id) / (len(_t_id) + len(_c_id))
     )
     ipm_rbf = mmd_rbf(
-                    x_rep[_t_id],
-                    x_rep[_c_id],
-                    p=len(_t_id) / (len(_t_id) + len(_c_id)),
-                    sig=sig,
-                )
-    ipm_lin_pre = mmd_lin(
-                    X[_t_id],
-                    X[_c_id],
-                    p=len(_t_id) / (len(_t_id) + len(_c_id))
+        x_rep[_t_id],
+        x_rep[_c_id],
+        p=len(_t_id) / (len(_t_id) + len(_c_id)),
+        sig=sig,
     )
+    ipm_lin_pre = mmd_lin(X[_t_id], X[_c_id], p=len(_t_id) / (len(_t_id) + len(_c_id)))
     ipm_rbf_pre = mmd_rbf(
-                    X[_t_id],
-                    X[_c_id],
-                    p=len(_t_id) / (len(_t_id) + len(_c_id)),
-                    sig=sig,
-                )
+        X[_t_id],
+        X[_c_id],
+        p=len(_t_id) / (len(_t_id) + len(_c_id)),
+        sig=sig,
+    )
     return {
         "ipm_lin": np.float64(ipm_lin.cpu().detach().numpy()),
         "ipm_rbf": np.float64(ipm_rbf.cpu().detach().numpy()),

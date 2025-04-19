@@ -18,7 +18,8 @@ def sparse_mx_to_torch_sparse_tensor(sparse_mx, cuda=False):
     """Convert a scipy sparse matrix to a torch sparse tensor."""
     sparse_mx = sparse_mx.tocoo().astype(np.float32)
     indices = torch.from_numpy(
-        np.vstack((sparse_mx.row, sparse_mx.col)).astype(np.int64))
+        np.vstack((sparse_mx.row, sparse_mx.col)).astype(np.int64)
+    )
     values = torch.from_numpy(sparse_mx.data)
     shape = torch.Size(sparse_mx.shape)
 
@@ -32,15 +33,15 @@ def normalize(mx):
     """Row-normalize sparse matrix"""
     rowsum = np.array(mx.sum(1))
     r_inv = np.power(rowsum, -1).flatten()
-    r_inv[np.isinf(r_inv)] = 0.
+    r_inv[np.isinf(r_inv)] = 0.0
     r_mat_inv = sp.diags(r_inv)
     mx = r_mat_inv.dot(mx)
     return mx
 
 
-def load_data(path, name='BlogCatalog', exp_id='0', original_X=False, extra_str=""):
-    data = sio.loadmat(path + name + extra_str + '/' + name + exp_id + '.mat')
-    A = data['Network']  # csr matrix
+def load_data(path, name="BlogCatalog", exp_id="0", original_X=False, extra_str=""):
+    data = sio.loadmat(path + name + extra_str + "/" + name + exp_id + ".mat")
+    A = data["Network"]  # csr matrix
 
     # try:
     # 	A = np.array(A.todense())
@@ -48,36 +49,51 @@ def load_data(path, name='BlogCatalog', exp_id='0', original_X=False, extra_str=
     # 	pass
 
     if not original_X:
-        X = data['X_100']
+        X = data["X_100"]
     else:
-        X = data['Attributes']
+        X = data["Attributes"]
 
-    Y1 = data['Y1']
-    Y0 = data['Y0']
-    T = data['T']
+    Y1 = data["Y1"]
+    Y0 = data["Y0"]
+    T = data["T"]
 
     return X, A, T, Y1, Y0
 
 
-def load_data_ours(path, name='Ours'):
-    df = pd.read_csv(f'user_features_v4.csv', sep=',')
-    
-    features = df.drop(['avg_money_before', 'avg_count_before'], axis=1)
+def load_data_ours(path, name="Ours"):
+    df = pd.read_csv(f"user_features_v4.csv", sep=",")
 
-    features_column = ['age', 'F', 'M', 'U', 'first_issue_abs_time', 'first_redeem_abs_time', 'redeem_delay']
-                       #'degree_before','weighted_degree_before']
-    columns_to_norm = ['age', 'first_issue_abs_time', 'first_redeem_abs_time', 'redeem_delay']#, 'degree_before',
-#                       'weighted_degree_before']
+    features = df.drop(["avg_money_before", "avg_count_before"], axis=1)
 
-    features[columns_to_norm] = StandardScaler().fit_transform(features[columns_to_norm])
-        
+    features_column = [
+        "age",
+        "F",
+        "M",
+        "U",
+        "first_issue_abs_time",
+        "first_redeem_abs_time",
+        "redeem_delay",
+    ]
+    #'degree_before','weighted_degree_before']
+    columns_to_norm = [
+        "age",
+        "first_issue_abs_time",
+        "first_redeem_abs_time",
+        "redeem_delay",
+    ]  # , 'degree_before',
+    #                       'weighted_degree_before']
+
+    features[columns_to_norm] = StandardScaler().fit_transform(
+        features[columns_to_norm]
+    )
+
     X = features[features_column].to_numpy()
-    T = np.expand_dims(features['treatment_flg'].to_numpy(), 0)
+    T = np.expand_dims(features["treatment_flg"].to_numpy(), 0)
 
-    A = pd.read_csv(f'user_product_v4.csv', sep=',')
-    
-    A = A[A['T']==0][['user', 'product']].to_numpy()
-    
+    A = pd.read_csv(f"user_product_v4.csv", sep=",")
+
+    A = A[A["T"] == 0][["user", "product"]].to_numpy()
+
     num_users = int(X.shape[0])
     num_products = 40542
 
@@ -85,18 +101,21 @@ def load_data_ours(path, name='Ours'):
 
     A[:, 1] += num_users
 
-    A = np.array([A[:, 0].tolist() + A[:, 1].tolist(), A[:, 1].tolist() + A[:, 0].tolist()])
+    A = np.array(
+        [A[:, 0].tolist() + A[:, 1].tolist(), A[:, 1].tolist() + A[:, 0].tolist()]
+    )
 
-    A_sparse = sp.csc_matrix(([1.0] * A.shape[-1], (A[0], A[1])), shape=(num_users + num_products,
-                                                                              num_users + num_products))
+    A_sparse = sp.csc_matrix(
+        ([1.0] * A.shape[-1], (A[0], A[1])),
+        shape=(num_users + num_products, num_users + num_products),
+    )
 
     return X, A_sparse, T
 
 
-
 def wasserstein(x, y, p=0.5, lam=10, its=10, sq=False, backpropT=False, cuda=False):
     """return W dist between x and y"""
-    '''distance matrix M'''
+    """distance matrix M"""
     nx = x.shape[0]
     ny = y.shape[0]
 
@@ -107,13 +126,13 @@ def wasserstein(x, y, p=0.5, lam=10, its=10, sq=False, backpropT=False, cuda=Fal
 
     M = pdist(x, y)  # distance_matrix(x,y,p=2)
 
-    '''estimate lambda and delta'''
+    """estimate lambda and delta"""
     M_mean = torch.mean(M)
     M_drop = F.dropout(M, 10.0 / (nx * ny))
     delta = torch.max(M_drop).detach()
     eff_lam = (lam / M_mean).detach()
 
-    '''compute new distance matrix'''
+    """compute new distance matrix"""
     Mt = M
     row = delta * torch.ones(M[0:1, :].shape)
     col = torch.cat([delta * torch.ones(M[:, 0:1].shape), torch.zeros((1, 1))], 0)
@@ -123,11 +142,11 @@ def wasserstein(x, y, p=0.5, lam=10, its=10, sq=False, backpropT=False, cuda=Fal
     Mt = torch.cat([M, row], 0)
     Mt = torch.cat([Mt, col], 1)
 
-    '''compute marginal'''
+    """compute marginal"""
     a = torch.cat([p * torch.ones((nx, 1)) / nx, (1 - p) * torch.ones((1, 1))], 0)
     b = torch.cat([(1 - p) * torch.ones((ny, 1)) / ny, p * torch.ones((1, 1))], 0)
 
-    '''compute kernel'''
+    """compute kernel"""
     Mlam = eff_lam * Mt
     temp_term = torch.ones(1) * 1e-6
     if cuda:
@@ -176,11 +195,10 @@ def pdist(sample_1, sample_2, norm=2, eps=1e-5):
         ``|| sample_1[i, :] - sample_2[j, :] ||_p``."""
     n_1, n_2 = sample_1.size(0), sample_2.size(0)
     norm = float(norm)
-    if norm == 2.:
-        norms_1 = torch.sum(sample_1 ** 2, dim=1, keepdim=True)
-        norms_2 = torch.sum(sample_2 ** 2, dim=1, keepdim=True)
-        norms = (norms_1.expand(n_1, n_2) +
-                 norms_2.transpose(0, 1).expand(n_1, n_2))
+    if norm == 2.0:
+        norms_1 = torch.sum(sample_1**2, dim=1, keepdim=True)
+        norms_2 = torch.sum(sample_2**2, dim=1, keepdim=True)
+        norms = norms_1.expand(n_1, n_2) + norms_2.transpose(0, 1).expand(n_1, n_2)
         distances_squared = norms - 2 * sample_1.mm(sample_2.t())
         return torch.sqrt(eps + torch.abs(distances_squared))
     else:
@@ -189,7 +207,8 @@ def pdist(sample_1, sample_2, norm=2, eps=1e-5):
         expanded_2 = sample_2.unsqueeze(0).expand(n_1, n_2, dim)
         differences = torch.abs(expanded_1 - expanded_2) ** norm
         inner = torch.sum(differences, dim=2, keepdim=False)
-        return (eps + inner) ** (1. / norm)
+        return (eps + inner) ** (1.0 / norm)
+
 
 # def sklearn_auc_score(t,ps):
 #     """
