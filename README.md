@@ -7,6 +7,14 @@ Start by installing the requirements.
 pip install -r requirements.txt
 ```
 
+## Run everything
+
+To run all experiments for the retail dataset run
+
+```bash
+python run.py
+```
+
 ## Data
 The script prepare_data downloads and processes the [RetailHero](https://ods.ai/competitions/x5-retailhero-uplift-modeling/data) into the folder data/retailhero and the [Movielens25](https://grouplens.org/datasets/movielens/25m/) into folder data/movielens.
 
@@ -38,7 +46,6 @@ To run the experiments with the default settings and the default config (attache
 ## UMGNN
 
 ```bash
-python umgn_retail.py
 python umgn_test_models.py
 python umgn_movielens.py
 python umgn_dragon_retail.py

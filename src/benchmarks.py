@@ -7,13 +7,29 @@ import os
 import random
 
 from sklearn.preprocessing import StandardScaler
-from utils import test_causalml
+from utils import run_benchmark
 
 import sys
 import argparse
 
+columns_to_use = [
+            "age",
+            "F",
+            "M",
+            "U",
+            "first_issue_abs_time",
+            "first_redeem_abs_time",
+            "redeem_delay",
+        ]
+columns_to_norm = [
+    "age",
+    "first_issue_abs_time",
+    "first_redeem_abs_time",
+    "redeem_delay",
+]
 
-def main(config_file):
+
+def benchmarks(config_file):
 
     with open(config_file, "r") as config_file:
         config = json.load(config_file)
@@ -28,23 +44,8 @@ def main(config_file):
     df = pd.read_csv(config["feature_file"])
 
     if dataset == "retail":
-        columns_to_use = [
-            "age",
-            "F",
-            "M",
-            "U",
-            "first_issue_abs_time",
-            "first_redeem_abs_time",
-            "redeem_delay",
-        ]
-        columns_to_norm = [
-            "age",
-            "first_issue_abs_time",
-            "first_redeem_abs_time",
-            "redeem_delay",
-        ]
         tasks = [1, 2]
-        dats = 1
+        datasets = 1
         features = df.copy()
         if len(columns_to_norm) > 0:
             normalized_data = StandardScaler().fit_transform(features[columns_to_norm])
@@ -55,12 +56,12 @@ def main(config_file):
 
     else:
         tasks = [3]
-        dats = 5
+        datasets = 5
         features = pd.read_csv(config["feature_file"])  # "movielens_features.csv")
         treatment = features.values[:, 0].astype(int)
         confounders = features.values[:, 1:]
 
-    for dat in range(dats):
+    for dat in range(datasets):
         for task in tasks:
             for k in [5, 20]:
 
@@ -68,9 +69,7 @@ def main(config_file):
 
                 v = dataset_ + "_" + str(k) + "_" + str(task)
 
-                results_file = config["benchmark_results_file"].replace(
-                    "version", str(v)
-                )
+                results_file = config["benchmark_results_file"].replace("version", str(v))
 
                 result = pd.DataFrame()
                 for run in range(number_of_runs):
@@ -93,7 +92,7 @@ def main(config_file):
                                 .values
                             )
 
-                    causalml_results = test_causalml(
+                    causalml_results = run_benchmark(
                         confounders, outcome, treatment, k, task, "S", random_seed=run
                     )
                     p = pd.Series(
@@ -102,14 +101,14 @@ def main(config_file):
                     result = pd.concat([result, p], axis=1)
                     print("S done")
 
-                    causalml_results = test_causalml(
+                    causalml_results = run_benchmark(
                         confounders, outcome, treatment, k, task, "R", random_seed=run
                     )
                     p = pd.Series(list(causalml_results.round(4).mean().values) + ["R"])
                     result = pd.concat([result, p], axis=1)
                     print("R done")
 
-                    causalml_results = test_causalml(
+                    causalml_results = run_benchmark(
                         confounders, outcome, treatment, k, task, "T", random_seed=run
                     )
                     p = pd.Series(
@@ -118,7 +117,7 @@ def main(config_file):
                     result = pd.concat([result, p], axis=1)
                     print("T done")
 
-                    causalml_results = test_causalml(
+                    causalml_results = run_benchmark(
                         confounders, outcome, treatment, k, task, "D", random_seed=run
                     )
                     p = pd.Series(
@@ -127,7 +126,7 @@ def main(config_file):
                     result = pd.concat([result, p], axis=1)
                     print("D done")
 
-                    causalml_results = test_causalml(
+                    causalml_results = run_benchmark(
                         confounders, outcome, treatment, k, task, "X", random_seed=run
                     )
                     p = pd.Series(
@@ -136,7 +135,7 @@ def main(config_file):
                     result = pd.concat([result, p], axis=1)
                     print("X done")
 
-                    causalml_results = test_causalml(
+                    causalml_results = run_benchmark(
                         confounders,
                         outcome,
                         treatment,
@@ -152,7 +151,7 @@ def main(config_file):
                     result = pd.concat([result, p], axis=1)
                     print("trees done")
 
-                    causalml_results = test_causalml(
+                    causalml_results = run_benchmark(
                         confounders,
                         outcome,
                         treatment,
@@ -170,7 +169,7 @@ def main(config_file):
 
                     # CEVAE takes too long to run
 
-                    causalml_results = test_causalml(
+                    causalml_results = run_benchmark(
                         confounders,
                         outcome,
                         treatment,
@@ -199,4 +198,4 @@ if __name__ == "__main__":
     args = parser.parse_args()
     config_file = args.config
     print(config_file)
-    main(config_file)
+    benchmarks(config_file)

@@ -6,13 +6,13 @@ import numpy as np
 import pandas as pd
 import torch
 from data_preperation import download_and_prepare
-from utils import outcome_regression_loss, run_umgnn
-
+from utils import outcome_regression_loss, run_umgnn, seed_everything
+from benchmarks import benchmarks
 
 DATA_NAME = 'retailhero'
 CONFIG_PATH = "config_"+DATA_NAME+".json"
 
-DATA_DIR = "../data/"+DATA_NAME
+DATA_DIR = "../../data/"+DATA_NAME
 
 USER_FEATURES = [
     "age", "F", "M", "U", 
@@ -55,7 +55,7 @@ def build_input_tensors(features_df, device):
     return xu
 
 
-def run_all(config : dict , 
+def run_umgn(config : dict , 
             edge_df: pd.DataFrame, 
             edge_index : torch.tensor, 
             features_df : pd.DataFrame, 
@@ -111,17 +111,14 @@ def run_all(config : dict ,
 
             pd.DataFrame(results).to_csv(results_file, index=False)
 
-def seed_everything(seed):
-    np.random.seed(seed)
-    random.seed(seed)
-    torch.manual_seed(seed)
+
 
 def main():
     config = load_config(CONFIG_PATH)
     device = setup_environment(config)
-    print(os.listdir())
+    benchmarks(CONFIG_PATH)
     edge_df, features_df, edge_index, treatment, outcome_money, outcome_change = load_data(config, device)
-    run_all(config, edge_df, edge_index, features_df, treatment, outcome_money, outcome_change, device)
+    run_umgn(config, edge_df, edge_index, features_df, treatment, outcome_money, outcome_change, device)
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
