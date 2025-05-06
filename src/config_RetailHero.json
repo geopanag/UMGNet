@@ -11,8 +11,8 @@
 "no_layers" :1,
 "number_of_runs":5,
 "with_label_prop" : 0,
-"feature_file" : "retailhero_features.csv",
-"edge_index_file" : "retailhero_graph.csv",
+"feature_file" : "processed/retailhero_features.csv",
+"edge_index_file" : "processed/retailhero_graph.csv",
 "model_file" : "../../model_version.pt",
 "results_file_name" : "results_version.csv",
 "causalml_dml_results" : "benchmark_results_file.csv"

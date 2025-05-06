@@ -286,7 +286,7 @@ class RetailHero(InMemoryDataset):
         data["weighted_degree_before"] = (
             data["client_id"].map(weighted_degrees).fillna(0)
         )
-        # data.to_csv(features_processed_file, index=False)
+        
 
         treatment = ["treatment_flg"]
         labels = [
@@ -359,10 +359,12 @@ class RetailHero(InMemoryDataset):
         }
         data["products"] = {"num_products": len(edge_index_df["product"].unique())}
 
-        # data = Data(x=xu, edge_index=edge_index, treatment=treatment, outcome_money=outcome_money, outcome_change=outcome_change)
         data_list = [data]
         data, slices = self.collate(data_list)
         torch.save((data, slices), self.processed_paths[0])
+
+
+
 
 
 class MovieLens25(InMemoryDataset):
@@ -405,6 +407,10 @@ class MovieLens25(InMemoryDataset):
         movies_dataset: str = "ml-25m/movies.csv",
         user_threshold: int = 200,
     ):
+        mean = 10
+        std_dev = 5
+        bound = 10
+        sim_runs = 5
         # ===== graph
         edge_index_df = pd.read_csv(f"{self.raw_dir}/{ratings_dataset}")
         edge_index_df = edge_index_df[["movieId", "userId", "rating"]]
@@ -454,9 +460,10 @@ class MovieLens25(InMemoryDataset):
         movies["sentence"] = (
             " title: " + movies["title"] + " genres:" + movies["genres"]
         )
-        model = SentenceTransformer(
-            "paraphrase-multilingual-MiniLM-L12-v2", device="cuda"
-        )  # use multilingual models for texts with non-english characters
+        
+        device = "cuda" if torch.cuda.is_available() else "cpu"
+        model = SentenceTransformer("paraphrase-multilingual-MiniLM-L12-v2", device=device)
+        # use multilingual models for texts with non-english characters
         embeddings_lite = model.encode(movies["sentence"].values.tolist())
         # pd.DataFrame(np.hstack([moviesd,treatmentd,embeddings_lite])).to_csv("movielens_features_full.csv",index=False)
 
@@ -493,11 +500,8 @@ class MovieLens25(InMemoryDataset):
 
         # -------------------- simulated outcomes
         x = features.values
-        mean = 10
-        std_dev = 5
-        bound = 10
         # Number of samples to generate
-        for dat in range(5):
+        for dat in range(sim_runs):
             np.random.seed(dat)
             # Generate random Gaussian noise
             random_noise = np.random.normal(mean, std_dev, x.shape[0])
@@ -509,14 +513,16 @@ class MovieLens25(InMemoryDataset):
             pd.DataFrame(Y).to_csv(f"movielens_y_{dat}.csv", index=False)
 
 
-def main():
-    os.makedirs("../data/retailhero", exist_ok=True)
-    os.makedirs("../data/movielens", exist_ok=True)
-    dataset = RetailHero(root="../data/retailhero")
-    data = dataset[0]
-    dataset = MovieLens25(root="../data/movielens")
-    data = dataset[0]
+def download_and_prepare(dataset:str):
+    if dataset=='retailhero':
+        os.makedirs("../data/retailhero", exist_ok=True)
+        dataset = RetailHero(root="../data/retailhero")
+        data = dataset[0]
+    else:
+        os.makedirs("../data/movielens", exist_ok=True)
+        dataset = MovieLens25(root="../data/movielens")
+        data = dataset[0]
 
 
 if __name__ == "__main__":
-    main()
+    download_and_prepare()

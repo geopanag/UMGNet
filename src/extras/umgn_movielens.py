@@ -38,10 +38,12 @@ def main():
 
     edge_index_df = pd.read_csv(config["edge_index_file"])
 
-    num_products = len(edge_index_df["user"].unique())
+    
 
     features = pd.read_csv(config["feature_file"])
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+    num_products = len(edge_index_df["user"].unique())
     edge_index = (
         torch.tensor(edge_index_df[["movie", "user"]].values)
         .type(torch.LongTensor)

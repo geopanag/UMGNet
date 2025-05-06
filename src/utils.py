@@ -5,8 +5,10 @@ import numpy as np
 
 from typing import Union
 
-
 import pandas as pd
+
+from evaluate import uplift_score
+
 from causalml.inference.meta import (
     BaseXClassifier,
     BaseSClassifier,
@@ -237,6 +239,9 @@ def run_umgnn(
     return pd.DataFrame(result_fold).mean().values
 
 
+
+
+
 def al_lp(
     test_indices: np.ndarray,
     degree: np.ndarray,
@@ -285,6 +290,8 @@ def al_lp(
             continue
 
     return new_train_indices
+
+
 
 
 def binary_treatment_loss(t_true: torch.tensor, t_pred: torch.tensor) -> torch.tensor:
@@ -424,59 +431,6 @@ def make_outcome_feature(
     return y
 
 
-def uplift_score(
-    prediction: np.ndarray, treatment: np.ndarray, target: np.ndarray, rate: float = 0.2
-) -> float:
-    """
-    From https://ods.ai/competitions/x5-retailhero-uplift-modeling/data
-    Order the samples by the predicted uplift.
-    Calculate the average ground truth outcome of the top rate*100% of the treated and the control samples.
-    Subtract the above to get the uplift.
-    """
-    order = np.argsort(-prediction)
-    treatment_n = int((treatment == 1).sum() * rate)
-    treatment_p = target[order][treatment[order] == 1][:treatment_n].mean()
-
-    control_n = int((treatment == 0).sum() * rate)
-    control_p = target[order][treatment[order] == 0][:control_n].mean()
-    score = treatment_p - control_p
-    return score
-
-
-def test_causalml(
-    confounders: np.ndarray,
-    outcome: np.ndarray,
-    treatment: np.ndarray,
-    k: int,
-    task: int = 0,
-    causal_model_type: str = "X",
-    model_out: str = "XGB",
-    random_seed: int = 0,
-) -> list:
-    """
-    Test the causalml model in a kfold cross validation.
-    """
-    results = []
-
-    kf = KFold(n_splits=k, shuffle=True, random_state=random_seed)
-    results = []
-    for train_indices, test_indices in kf.split(confounders):
-        test_indices, train_indices = train_indices, test_indices
-
-        up40, up20 = causalml_run(
-            confounders[train_indices],
-            outcome[train_indices],
-            treatment[train_indices],
-            confounders[test_indices],
-            outcome[test_indices],
-            treatment[test_indices],
-            task,
-            causal_model_type,
-            model_out,
-        )
-        results.append((up40, up20))
-
-    return pd.DataFrame(results)
 
 
 def causalml_run(
@@ -699,3 +653,38 @@ def causalml_run(
             uplift, treatment_test, outcome_test, rate=0.2
         )  # uplift_at_k(y_true = outcome_test, uplift=uplift, treatment= treatment_test, strategy='by_group', k=0.2)
     return score40, score20
+
+def test_causalml(
+    confounders: np.ndarray,
+    outcome: np.ndarray,
+    treatment: np.ndarray,
+    k: int,
+    task: int = 0,
+    causal_model_type: str = "X",
+    model_out: str = "XGB",
+    random_seed: int = 0,
+) -> list:
+    """
+    Test the causalml model in a kfold cross validation.
+    """
+    results = []
+
+    kf = KFold(n_splits=k, shuffle=True, random_state=random_seed)
+    results = []
+    for train_indices, test_indices in kf.split(confounders):
+        test_indices, train_indices = train_indices, test_indices
+
+        up40, up20 = causalml_run(
+            confounders[train_indices],
+            outcome[train_indices],
+            treatment[train_indices],
+            confounders[test_indices],
+            outcome[test_indices],
+            treatment[test_indices],
+            task,
+            causal_model_type,
+            model_out,
+        )
+        results.append((up40, up20))
+
+    return pd.DataFrame(results)
