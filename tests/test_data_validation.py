@@ -1,7 +1,7 @@
 import pytest
 import torch
 from torch_geometric.data import HeteroData
-from src.data_preperation import RetailHero
+from data_preperation import RetailHero
 
 
 @pytest.fixture(scope="module")

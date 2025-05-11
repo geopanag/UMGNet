@@ -7,8 +7,6 @@ from typing import Union
 
 import pandas as pd
 
-from evaluate import uplift_score
-
 from causalml.inference.meta import (
     BaseXClassifier,
     BaseSClassifier,
@@ -44,6 +42,7 @@ from sklearn.cluster import KMeans
 
 import sys
 from models import BipartiteSAGE2mod, UserMP
+from evaluate import uplift_score 
 
 
 def run_umgnn(
@@ -92,8 +91,7 @@ def run_umgnn(
 
         ## Keep the graph before the treatment and ONLY the edges of the the train nodes (i.e. after the treatment)
         # remove edge_index_df[ edge_index_df['user'].isin(train_indices)  if you dont want edges from train set
-        edge_index_up_current = edge_index[
-            :,
+        edge_index_up_current = edge_index[:,
             edge_index_df[
                 edge_index_df["user"].isin(subtrain_indices) | edge_index_df["T"] == 0
             ].index.values,
