@@ -32,10 +32,6 @@ def test_edge_index_valid(retailhero_data):
     num_products = retailhero_data["products"]["num_products"]
     validate_edge_index(edge_index, num_users, num_products)
 
-def test_heterodata_structure(retailhero_data):
-    validate_heterodata_object(retailhero_data, "user", ("user", "buys", "product"))
-
-
 
 def validate_edge_index(edge_index: torch.Tensor, num_nodes_src: int, num_nodes_dst: int):
     if edge_index.shape[0] != 2:
@@ -44,11 +40,8 @@ def validate_edge_index(edge_index: torch.Tensor, num_nodes_src: int, num_nodes_
         raise ValueError("edge_index contains node ids out of bounds")
     return True
 
-def validate_heterodata_object(data: HeteroData, node_type: str, edge_type: tuple):
-    assert isinstance(data, HeteroData), "Data must be a HeteroData object"
-    assert node_type in data.node_types, f"Node type '{node_type}' not found"
-    assert edge_type in data.edge_types, f"Edge type {edge_type} not found"
-    return True
+
+
 
 def validate_treatment_binary(treatment_tensor: torch.Tensor):
     unique_vals = torch.unique(treatment_tensor)

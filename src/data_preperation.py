@@ -353,10 +353,9 @@ class RetailHero(InMemoryDataset):
                 ].values
             ).type(torch.FloatTensor),
             "t": torch.tensor(features["treatment_flg"].values).type(torch.LongTensor),
-            "y": torch.tensor(features["avg_money_change"].values).type(
-                torch.FloatTensor
-            ),
+            "y": torch.tensor(features["avg_money_change"].values).type(torch.FloatTensor),
         }
+        
         data["products"] = {"num_products": len(edge_index_df["product"].unique())}
 
         data_list = [data]
